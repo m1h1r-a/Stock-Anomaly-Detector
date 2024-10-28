@@ -10,6 +10,8 @@ from .forms import LoginForm, RegistrationForm
 
 # Create your views here.
 def user_login(request):
+    error_message = None
+
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -21,12 +23,14 @@ def user_login(request):
                 login(request, user)
                 return render(request, "users/dashboard.html")
             else:
-                messages.error(request, "Invalid Username or Password")
-                return render(request, "users/home.html")
+                error_message = "Invalid username or password."  # Set the error message
+
     else:
         form = LoginForm()
 
-    return render(request, "users/login.html", {"form": form})
+    return render(
+        request, "users/login.html", {"form": form, "error_message": error_message}
+    )
 
 
 def register(request):
