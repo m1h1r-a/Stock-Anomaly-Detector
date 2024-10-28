@@ -17,7 +17,7 @@ def user_login(request):
             )
             if user is not None:
                 login(request, user)
-                return HttpResponse("User authenticated and logged in")
+                return render(request, "users/index.html")
             else:
                 return HttpResponse("Invalid Credentials")
     else:
@@ -37,5 +37,5 @@ def home(request):
 
 def user_logout(request):
     logout(request)  # Logs out the user
-    return HttpResponse("You have been logged out.")  # Response message after logout
+    return render(request, "users/home.html")  # Response message after logout
 
