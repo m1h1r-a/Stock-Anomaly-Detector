@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -20,6 +21,7 @@ def user_login(request):
                 login(request, user)
                 return render(request, "users/dashboard.html")
             else:
+                messages.error(request, "Invalid Username or Password")
                 return render(request, "users/home.html")
     else:
         form = LoginForm()
