@@ -36,6 +36,10 @@
         .main {
             margin-top:80px;
             padding: 10px 0px;
+            min-height: calc(100vh - 80px); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         h1 {
@@ -51,7 +55,6 @@
     <body>
         {% if request.user.is_authenticated %}
             <div class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
-                <a href="/">Home</a>
                 <a href="/dashbaord">Dashboard</a>
                 <a href="/analytics">Analytics</a>
                 <!-- <a href="{% url 'logout' %}">Logout</a> -->

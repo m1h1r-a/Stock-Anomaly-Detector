@@ -19,7 +19,7 @@ def user_login(request):
                 login(request, user)
                 return render(request, "users/index.html")
             else:
-                return HttpResponse("Invalid Credentials")
+                return render(request, "users/home.html")
     else:
         form = LoginForm()
 
@@ -38,4 +38,3 @@ def home(request):
 def user_logout(request):
     logout(request)  # Logs out the user
     return render(request, "users/home.html")  # Response message after logout
-
