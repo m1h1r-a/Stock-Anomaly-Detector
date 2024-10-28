@@ -1,9 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
-from .forms import LoginForm
+from .forms import LoginForm, RegistrationForm
 
 
 # Create your views here.
@@ -17,7 +18,7 @@ def user_login(request):
             )
             if user is not None:
                 login(request, user)
-                return render(request, "users/index.html")
+                return render(request, "users/dashboard.html")
             else:
                 return render(request, "users/home.html")
     else:
@@ -26,9 +27,28 @@ def user_login(request):
     return render(request, "users/login.html", {"form": form})
 
 
+def register(request):
+    if request.method == "POST":
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data["password"])
+            user.save()
+            return redirect("login")  # Redirect to login page after registration
+    else:
+        form = RegistrationForm()
+
+    return render(request, "users/register.html", {"form": form})
+
+
 @login_required
-def index(request):
-    return render(request, "users/index.html")
+def dashboard(request):
+    return render(request, "users/dashboard.html")
+
+
+@login_required
+def analytics(request):
+    return render(request, "users/analytics.html")
 
 
 def home(request):
