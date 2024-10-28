@@ -111,21 +111,24 @@
         <title>DBMS</title>  
     </head>
     <body>
+
         {% if request.user.is_authenticated %}
             <div class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
                 <a href="/dashbaord">Dashboard</a>
                 <a href="/analytics">Analytics</a>
-                <a href="/users/logout" class="btn btn-sm btn-outline-secondary ms-auto">Logout</a>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="text-secondary me-3" style="font-size: 30px;">{{ request.user.username }}</span>
+                    <a href="/users/logout" class="btn btn-sm btn-outline-secondary">Logout</a>
+                </div>
             </div>
-
         {% else %}
-
             <div class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
                 <a href="/users/login" class="btn btn-sm btn-outline-secondary">Login</a>
                 <a href="/users/register" class="btn btn-sm btn-outline-secondary">Register</a>
             </div>
-
         {% endif %}
+
+
 
         <div id="content" name="content" class="main">
             <div>
