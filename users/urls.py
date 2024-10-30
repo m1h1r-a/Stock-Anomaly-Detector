@@ -9,6 +9,13 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("dashbaord/", views.dashboard, name="dashboard"),
     path("analytics/", views.analytics, name="analytics"),
-    path('portfolio/', views.portfolio_view, name='portfolio'),
-    path('transactions/<str:stock_symbol>/', views.transactions_view, name='transactions'),
+    path("portfolio/", views.portfolio_view, name="portfolio"),
+    path(
+        "transactions/<str:stock_symbol>/", views.transactions_view, name="transactions"
+    ),
+    path(
+        "portfolio/add-stocks/",
+        views.add_stock_transaction,
+        name="add_stock_transaction",
+    ),
 ]

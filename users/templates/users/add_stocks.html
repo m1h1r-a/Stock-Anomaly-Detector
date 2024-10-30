@@ -1,0 +1,57 @@
+{% extends 'users/base.html' %}
+
+{% block body %}
+
+<div class="position-absolute top-50 start-50 translate-middle">
+    <h1>Add Stock Transaction</h1>
+
+    {% if error_message %}
+    <script>
+        alert("{{ error_message }}");
+    </script>
+    {% endif %}
+
+    <form method="POST" action="{% url 'add_stock_transaction' %}">
+        {% csrf_token %}
+
+        <!-- Purchase Type Field -->
+        <p>
+            <label for="purchase_type">Purchase Type</label>
+            <select id="purchase_type" name="purchase_type" required>
+                <option value="">Select...</option>
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+            </select>
+        </p>
+
+        <!-- Price Field -->
+        <p>
+            <label for="price">Price</label>
+            <input type="number" step="0.01" id="price" name="price" placeholder="Enter price" required>
+        </p>
+
+        <!-- Quantity Field -->
+        <p>
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" required>
+        </p>
+
+        <!-- Stock Symbol Field -->
+        <p>
+            <label for="stock_symbol">Stock Symbol</label>
+            <input type="text" id="stock_symbol" name="stock_symbol" placeholder="Enter stock symbol" required>
+        </p>
+
+        <!-- Transaction Date Field -->
+        <p>
+            <label for="transaction_date">Transaction Date</label>
+            <input type="date" id="transaction_date" name="transaction_date" required>
+        </p>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Add Transaction">
+    </form>
+
+</div>
+
+{% endblock %}
