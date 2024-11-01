@@ -24,7 +24,7 @@ def user_login(request):
             if user is not None:
                 login(request, user)  # with connection.cursor() as cursor:
                 # cursor.execute("""insert into test values (1)""")
-                return render(request, "users/portfolio.html")
+                return redirect("portfolio")
 
             else:
                 error_message = "Invalid username or password."  # Set the error message

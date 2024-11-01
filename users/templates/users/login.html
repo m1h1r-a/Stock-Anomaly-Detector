@@ -3,7 +3,7 @@
 {% block body %}
 
 <div class="position-absolute top-50 start-50 translate-middle">
-<h1>Login</h1>
+<h1 style="color:white;">Login</h1>
 
 {% if error_message %}
     <script>
@@ -14,7 +14,7 @@
 <form form method="POST" action="{% url 'login' %}">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit">
+    <button type="submit">Login</button>
 </form>
 
 
