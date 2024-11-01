@@ -146,29 +146,29 @@ def add_stock_transaction(request):
                         ],
                     )
 
-                    # Then, update or insert into portfolio table
-                    cursor.execute(
-                        """
-                        INSERT INTO portfolio (user_id, stock_symbol, total_quantity)
-                        VALUES (%s, %s, %s)
-                        ON CONFLICT (user_id, stock_symbol) 
-                        DO UPDATE SET total_quantity = portfolio.total_quantity + %s
-                        """,
-                        [
-                            user_id,
-                            data["stock_symbol"],
-                            (
-                                data["quantity"]
-                                if data["purchase_type"] == "BUY"
-                                else -data["quantity"]
-                            ),
-                            (
-                                data["quantity"]
-                                if data["purchase_type"] == "BUY"
-                                else -data["quantity"]
-                            ),
-                        ],
-                    )
+                    # # Then, update or insert into portfolio table
+                    # cursor.execute(
+                    #     """
+                    #     INSERT INTO portfolio (user_id, stock_symbol, total_quantity)
+                    #     VALUES (%s, %s, %s)
+                    #     ON CONFLICT (user_id, stock_symbol) 
+                    #     DO UPDATE SET total_quantity = portfolio.total_quantity + %s
+                    #     """,
+                    #     [
+                    #         user_id,
+                    #         data["stock_symbol"],
+                    #         (
+                    #             data["quantity"]
+                    #             if data["purchase_type"] == "BUY"
+                    #             else -data["quantity"]
+                    #         ),
+                    #         (
+                    #             data["quantity"]
+                    #             if data["purchase_type"] == "BUY"
+                    #             else -data["quantity"]
+                    #         ),
+                    #     ],
+                    # )
 
                 messages.success(request, "Stock transaction added successfully.")
                 return redirect("portfolio")
