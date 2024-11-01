@@ -1,19 +1,14 @@
 {% extends 'users/base.html' %}
-
 {% block body %}
-
 <div class="position-absolute top-55 start-50 translate-middle">
-    <h1 style="color:white;">Add Stock Transaction</h1>
-
+    <h1 style="color:grey;">Add Stock Transaction</h1>
     {% if error_message %}
     <script>
         alert("{{ error_message }}");
     </script>
     {% endif %}
-
-    <form method="POST" action="{% url 'add_stock_transaction' %}">
+    <form method="POST" action="{% url 'add_stock_transaction' %}" class="transaction-form">
         {% csrf_token %}
-
         <!-- Purchase Type Field -->
         <p>
             <label for="purchase_type">Purchase Type</label>
@@ -23,35 +18,96 @@
                 <option value="SELL">Sell</option>
             </select>
         </p>
-
         <!-- Price Field -->
         <p>
             <label for="price">Price</label>
             <input type="number" step="0.01" id="price" name="price" placeholder="Enter price" required>
         </p>
-
         <!-- Quantity Field -->
         <p>
             <label for="quantity">Quantity</label>
             <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" required>
         </p>
-
         <!-- Stock Symbol Field -->
         <p>
             <label for="stock_symbol">Stock Symbol</label>
             <input type="text" id="stock_symbol" name="stock_symbol" placeholder="Enter stock symbol" required>
         </p>
-
         <!-- Transaction Date Field -->
         <p>
             <label for="transaction_date">Transaction Date</label>
             <input type="date" id="transaction_date" name="transaction_date" required>
         </p>
-
         <!-- Submit Button -->
-        <input type="submit" value="Add Transaction">
+        <input type="submit" value="Add Transaction" class="submit-btn">
     </form>
-
 </div>
 
+<style>
+    body {
+        background-color: #87CEEB;
+    }
+
+    .position-absolute {
+        width: 100%;
+        max-width: 400px;
+        background-color: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .transaction-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .transaction-form p {
+        margin-bottom: 15px;
+    }
+
+    .transaction-form label {
+        display: block;
+        margin-bottom: 8px;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .transaction-form select,
+    .transaction-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1.5px solid #e0e4e8;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .transaction-form select:focus,
+    .transaction-form input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        background-color: #2980b9;
+    }
+
+    .transaction-form input::placeholder {
+        color: #95a5a6;
+    }
+</style>
 {% endblock %}
