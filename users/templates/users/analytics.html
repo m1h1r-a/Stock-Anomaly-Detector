@@ -1,4 +1,61 @@
 {% extends 'users/base.html' %}
+
 {% block body %}
-<h1 style="color:white;">Analytics</h1>
+<div class="container stock-container">
+    <h2 class="text-center">Stock Portfolio</h2>
+    <div id="stock-list">
+        {% for stock in stock_data %}
+        <div class="stock-item">
+            <div class="stock-name">{{ stock.symbol }}</div>
+            <div class="price">₹{{ stock.price }}</div>
+            <div class="change {% if stock.change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                {% if stock.change >= 0 %} +{% endif %} ₹{{ stock.change }}
+            </div>
+            <div class="percent-change {% if stock.change_percent >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                {% if stock.change_percent >= 0 %} ↑{% else %} ↓{% endif %} {{ stock.change_percent }}%
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function fetchStockData() {
+        console.log("Fetching stock data...");  // Check if this logs in the console
+        $.ajax({
+            url: "{% url 'stock_data_api' %}",  // Make sure this URL is correct
+            type: "GET",
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'  // AJAX request to Django
+            },
+            success: function(response) {
+                $('#stock-list').empty();
+                response.stock_data.forEach(stock => {
+                    const stockItem = `
+                        <div class="stock-item">
+                            <div class="stock-name">${stock.symbol}</div>
+                            <div class="price">₹${stock.price}</div>
+                            <div class="change ${stock.change >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${stock.change >= 0 ? '+' : ''} ₹${stock.change}
+                            </div>
+                            <div class="percent-change ${stock.change_percent >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${stock.change_percent >= 0 ? '↑' : '↓'} ${stock.change_percent}%
+                            </div>
+                        </div>
+                    `;
+                    $('#stock-list').append(stockItem);
+                });
+            },
+            error: function(error) {
+                console.error("Error fetching data:", error);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        fetchStockData();            // Initial fetch on page load
+        setInterval(fetchStockData, 10000);  // Fetch every 10 seconds
+    });
+</script>
 {% endblock %}

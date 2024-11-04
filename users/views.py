@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-
+from django.http import JsonResponse
 from .forms import AddStockTransactionForm, LoginForm, RegistrationForm
 from .models import Portfolio, StockTransaction
-
+from datetime import datetime
+import requests
 
 # Create your views here.
 def user_login(request):
@@ -67,15 +68,15 @@ def home(request):
 
 @login_required
 def user_logout(request):
-    logout(request)  # Logs out the user
-    return render(request, "users/home.html")  # Response message after logout
+    logout(request)  
+    return render(request, "users/home.html")  
 
 
 @login_required
 def portfolio_view(request):
     user_id = request.user.id
 
-    # Raw SQL to fetch stock symbols in the user's portfolio
+   
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [user_id]
@@ -84,14 +85,13 @@ def portfolio_view(request):
     return render(request, "users/portfolio.html", {"symbols": symbols})
 
 
-# View to fetch transactions for a specific stock symbol
 
 
 @login_required
 def transactions_view(request, stock_symbol):
     user_id = request.user.id
 
-    # Raw SQL to fetch transactions based on stock symbol and user
+    
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -103,7 +103,6 @@ def transactions_view(request, stock_symbol):
         )
         transactions = cursor.fetchall()
 
-    # Structure transactions as JSON data
     transactions_data = [
         {
             "transaction_id": row[0],
@@ -146,30 +145,6 @@ def add_stock_transaction(request):
                         ],
                     )
 
-                    # # Then, update or insert into portfolio table
-                    # cursor.execute(
-                    #     """
-                    #     INSERT INTO portfolio (user_id, stock_symbol, total_quantity)
-                    #     VALUES (%s, %s, %s)
-                    #     ON CONFLICT (user_id, stock_symbol) 
-                    #     DO UPDATE SET total_quantity = portfolio.total_quantity + %s
-                    #     """,
-                    #     [
-                    #         user_id,
-                    #         data["stock_symbol"],
-                    #         (
-                    #             data["quantity"]
-                    #             if data["purchase_type"] == "BUY"
-                    #             else -data["quantity"]
-                    #         ),
-                    #         (
-                    #             data["quantity"]
-                    #             if data["purchase_type"] == "BUY"
-                    #             else -data["quantity"]
-                    #         ),
-                    #     ],
-                    # )
-
                 messages.success(request, "Stock transaction added successfully.")
                 return redirect("portfolio")
 
@@ -179,4 +154,55 @@ def add_stock_transaction(request):
         form = AddStockTransactionForm()
 
     return render(request, "users/add_stocks.html", {"form": form})
+
+
+def get_stock_data(symbol):
+    api_key = 'KMSX2N60VHYWHGYR'  
+    url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}'
+    response = requests.get(url)
+    data = response.json()
+    
+    try:
+        price = float(data['Global Quote']['05. price'])
+        change = float(data['Global Quote']['09. change'])
+        change_percent = float(data['Global Quote']['10. change percent'].replace('%', ''))
+    except (KeyError, ValueError):
+        price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
+
+    # Return formatted data
+    return {
+        'symbol': symbol,
+        'price': price,
+        'change': change,
+        'change_percent': change_percent
+    }
+
+    # return {
+    #     'symbol': symbol,
+    #     'price': data,
+    #     'change': data,
+    #     'change_percent': data
+    # }
+
+def stock_data_api(request):
+    print(222)
+    user_id = request.user.id
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [user_id]
+        )
+
+        symbols = [row[0] for row in cursor.fetchall()]
+    stock_data = [get_stock_data(symbol) for symbol in symbols]
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({"stock_data": stock_data})
+
+    print(symbols)
+    stock_data = [get_stock_data(symbol) for symbol in symbols]
+    return render(request, "users/analytics.html", {"stock_data": stock_data})
+    #return JsonResponse(stock_data, safe=False)
+
+
+
+
 
