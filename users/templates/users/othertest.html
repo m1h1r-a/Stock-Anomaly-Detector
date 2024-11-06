@@ -1,0 +1,220 @@
+{% extends 'users/base.html' %}
+
+{% block body %}
+<style>
+    .stock-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .stock-container h2 {
+        color: white;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .stock-container h2:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(90deg, #3182ce, #63b3ed);
+    }
+
+    /* Desktop Table Layout */
+    @media (min-width: 769px) {
+        #stock-list {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .stock-item {
+            display: table-row;
+            background: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stock-item>div {
+            display: table-cell;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .stock-item>div:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .stock-item>div:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .stock-item:hover>div {
+            background: #f7fafc;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header Row */
+        #stock-list::before {
+            content: '';
+            display: table-row;
+            background: #2d3748;
+        }
+
+        #stock-list::after {
+            display: table-header-group;
+            white-space: pre;
+            color: white;
+            font-weight: 600;
+        }
+
+        #stock-list::after>* {
+            display: table-cell;
+            padding: 1rem;
+            text-align: left;
+        }
+    }
+
+    /* Mobile Card Layout */
+    @media (max-width: 768px) {
+        #stock-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .stock-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 0.5rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+    }
+
+    /* Common Styles */
+    .stock-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .price {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #4a5568;
+        text-align: right;
+    }
+
+    .change,
+    .percent-change {
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 80px;
+    }
+
+    .change-positive {
+        color: #048848;
+        background-color: #def7ec;
+    }
+
+    .change-negative {
+        color: #e02424;
+        background-color: #fde8e8;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .stock-list.loading {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+
+<div class="stock-container">
+    <h2 class="text-center">Stock Portfolio</h2>
+    <div id="stock-list">
+        {% for stock in stock_data %}
+        <div class="stock-item">
+            <div class="stock-name">{{ stock.symbol }}</div>
+            <div class="price">₹{{ stock.price }}</div>
+            <div class="change {% if stock.change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                {% if stock.change >= 0 %}+{% endif %}₹{{ stock.change }}
+            </div>
+            <div
+                class="percent-change {% if stock.change_percent >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                {% if stock.change_percent >= 0 %}↑{% else %}↓{% endif %} {{ stock.change_percent }}%
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function fetchStockData() {
+        console.log("Fetching stock data...");
+        $.ajax({
+            url: "{% url 'stock_data_api' %}",
+            type: "GET",
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function (response) {
+                $('#stock-list').empty();
+                response.stock_data.forEach(stock => {
+                    const stockItem = `
+                        <div class="stock-item">
+                            <div class="stock-name">${stock.symbol}</div>
+                            <div class="price">₹${stock.price}</div>
+                            <div class="change ${stock.change >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${stock.change >= 0 ? '+' : ''}₹${stock.change}
+                            </div>
+                            <div class="percent-change ${stock.change_percent >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${stock.change_percent >= 0 ? '↑' : '↓'} ${stock.change_percent}%
+                            </div>
+                        </div>
+                    `;
+                    $('#stock-list').append(stockItem);
+                });
+            },
+            error: function (error) {
+                console.error("Error fetching data:", error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        fetchStockData();
+        setInterval(fetchStockData, 10000);
+    });
+</script>
+{% endblock %}

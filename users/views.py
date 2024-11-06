@@ -1,3 +1,7 @@
+import json
+from datetime import datetime
+
+import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -5,11 +9,11 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
 from .forms import AddStockTransactionForm, LoginForm, RegistrationForm
 from .models import Portfolio, StockTransaction
-from datetime import datetime
-import requests
+
 
 # Create your views here.
 def user_login(request):
@@ -68,15 +72,14 @@ def home(request):
 
 @login_required
 def user_logout(request):
-    logout(request)  
-    return render(request, "users/home.html")  
+    logout(request)
+    return render(request, "users/home.html")
 
 
 @login_required
 def portfolio_view(request):
     user_id = request.user.id
 
-   
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [user_id]
@@ -85,13 +88,10 @@ def portfolio_view(request):
     return render(request, "users/portfolio.html", {"symbols": symbols})
 
 
-
-
 @login_required
 def transactions_view(request, stock_symbol):
     user_id = request.user.id
 
-    
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -157,24 +157,26 @@ def add_stock_transaction(request):
 
 
 def get_stock_data(symbol):
-    api_key = 'KMSX2N60VHYWHGYR'  
-    url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}'
+    api_key = "KMSX2N60VHYWHGYR"
+    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
     response = requests.get(url)
     data = response.json()
-    
+
     try:
-        price = float(data['Global Quote']['05. price'])
-        change = float(data['Global Quote']['09. change'])
-        change_percent = float(data['Global Quote']['10. change percent'].replace('%', ''))
+        price = float(data["Global Quote"]["05. price"])
+        change = float(data["Global Quote"]["09. change"])
+        change_percent = float(
+            data["Global Quote"]["10. change percent"].replace("%", "")
+        )
     except (KeyError, ValueError):
         price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
 
     # Return formatted data
     return {
-        'symbol': symbol,
-        'price': price,
-        'change': change,
-        'change_percent': change_percent
+        "symbol": symbol,
+        "price": price,
+        "change": change,
+        "change_percent": change_percent,
     }
 
     # return {
@@ -183,6 +185,7 @@ def get_stock_data(symbol):
     #     'change': data,
     #     'change_percent': data
     # }
+
 
 def stock_data_api(request):
     print(222)
@@ -194,15 +197,39 @@ def stock_data_api(request):
 
         symbols = [row[0] for row in cursor.fetchall()]
     stock_data = [get_stock_data(symbol) for symbol in symbols]
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({"stock_data": stock_data})
 
     print(symbols)
     stock_data = [get_stock_data(symbol) for symbol in symbols]
     return render(request, "users/analytics.html", {"stock_data": stock_data})
-    #return JsonResponse(stock_data, safe=False)
+    # return JsonResponse(stock_data, safe=False)
 
 
+@login_required
+@require_POST
+def delete_stock(request, stock_symbol):
+    user_id = request.user.id
+    try:
+        with connection.cursor() as cursor:
+            # First delete all transactions for this stock
+            cursor.execute(
+                """
+                DELETE FROM stock_transactions 
+                WHERE user_id = %s AND stock_symbol = %s
+            """,
+                [user_id, stock_symbol],
+            )
 
+            # Then delete the stock from portfolio
+            cursor.execute(
+                """
+                DELETE FROM portfolio 
+                WHERE user_id = %s AND stock_symbol = %s
+            """,
+                [user_id, stock_symbol],
+            )
 
-
+        return JsonResponse({"status": "success"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
