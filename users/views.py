@@ -233,3 +233,64 @@ def delete_stock(request, stock_symbol):
         return JsonResponse({"status": "success"})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def update_transaction(request, transaction_id):
+    try:
+        data = json.loads(request.body)
+        user_id = request.user.id
+
+        with connection.cursor() as cursor:
+            # First get the stock symbol and verify ownership
+            cursor.execute(
+                """
+                SELECT stock_symbol 
+                FROM stock_transactions 
+                WHERE transaction_id = %s AND user_id = %s
+                """,
+                [transaction_id, user_id],
+            )
+            result = cursor.fetchone()
+            if not result:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "Transaction not found or unauthorized",
+                    },
+                    status=404,
+                )
+
+            stock_symbol = result[0]
+
+            # Perform update
+            cursor.execute(
+                """
+                UPDATE stock_transactions 
+                SET purchase_type = %s,
+                    price = %s,
+                    quantity = %s,
+                    transaction_date = %s
+                WHERE transaction_id = %s AND user_id = %s
+                """,
+                [
+                    data["purchase_type"],
+                    data["price"],
+                    data["quantity"],
+                    data["transaction_date"],
+                    transaction_id,
+                    user_id,
+                ],
+            )
+
+        return JsonResponse(
+            {
+                "status": "success",
+                "symbol": stock_symbol,
+                "message": "Transaction updated successfully",
+            }
+        )
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)

@@ -15,6 +15,11 @@ urlpatterns = [
     ),
     path("delete-stock/<str:stock_symbol>/", views.delete_stock, name="delete_stock"),
     path(
+        "update-transaction/<int:transaction_id>/",
+        views.update_transaction,
+        name="update_transaction",
+    ),
+    path(
         "portfolio/add-stocks/",
         views.add_stock_transaction,
         name="add_stock_transaction",
