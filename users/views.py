@@ -203,7 +203,7 @@ def stock_data_api(request):
     print(symbols)
     stock_data = [get_stock_data(symbol) for symbol in symbols]
     return render(request, "users/analytics.html", {"stock_data": stock_data})
-    # return JsonResponse(stock_data, safe=False)
+    #return JsonResponse(stock_data, safe=False)
 
 
 @login_required
@@ -294,3 +294,112 @@ def update_transaction(request, transaction_id):
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+
+@login_required
+def portfolio_analytics(request):
+    user_id = request.user.id
+
+    # Initialize the list to hold profit/loss details for each stock
+    profit_loss_list = []
+
+    # Query 1: Calculate total quantity, average buy price, and average sell price per stock
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT stock_symbol,
+                   SUM(CASE WHEN purchase_type = 'BUY' THEN quantity ELSE -quantity END) AS total_quantity,
+                   AVG(CASE WHEN purchase_type = 'BUY' THEN price END) AS avg_buy_price,
+                   AVG(CASE WHEN purchase_type = 'SELL' THEN price END) AS avg_sell_price
+            FROM stock_transactions
+            WHERE user_id = %s
+            GROUP BY stock_symbol
+        """, [user_id])
+
+        stock_analytics = [
+            {
+                "stock_symbol": row[0],
+                "total_quantity": row[1],
+                "avg_buy_price": row[2] if row[2] else 0.0,
+                "avg_sell_price": row[3] if row[3] else 0.0,
+            }
+            for row in cursor.fetchall()
+        ]
+
+    # Query 2: Nested query to identify top traded stocks by frequency
+    min_trades = 5  # Set the minimum trade count threshold
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT stock_symbol, trade_count
+            FROM (
+                SELECT stock_symbol, COUNT(*) AS trade_count
+                FROM stock_transactions
+                WHERE user_id = %s
+                GROUP BY stock_symbol
+            ) AS stock_trades
+            WHERE trade_count >= %s
+            ORDER BY trade_count DESC
+        """, [user_id, min_trades])
+
+        top_traded_stocks = [
+            {
+                "stock_symbol": row[0],
+                "trade_count": row[1],
+            }
+            for row in cursor.fetchall()
+        ]
+
+    # Get all unique stock symbols for the user
+    share_name = StockTransaction.objects.filter(user_id=user_id).values_list('stock_symbol', flat=True).distinct()
+
+    for sname in share_name:  # For each unique stock symbol
+        # Initialize counters
+        qty_sold = 0
+        total_sell_price = 0
+        costprice = 0
+        remaining_qty_to_sell = 0
+
+        # Get all transactions for this stock symbol
+        transactions = StockTransaction.objects.filter(user_id=user_id, stock_symbol=sname)
+
+        # Calculate total quantity sold and total sell price
+        for transaction in transactions.filter(purchase_type='SELL'):
+            qty_sold += transaction.quantity
+            total_sell_price += transaction.price * transaction.quantity
+            remaining_qty_to_sell = qty_sold
+
+        # Calculate the cost price based on FIFO
+        for transaction in transactions.filter(purchase_type='BUY'):
+            if remaining_qty_to_sell > 0:
+                quantity = transaction.quantity
+                price = transaction.price
+                if remaining_qty_to_sell < quantity:
+                    costprice += remaining_qty_to_sell * price
+                    remaining_qty_to_sell = 0
+                else:
+                    costprice += quantity * price
+                    remaining_qty_to_sell -= quantity
+
+        # Calculate profit or loss if any shares were sold
+        if qty_sold > 0:
+            avg_sell_price = total_sell_price / qty_sold  # Average sell price
+            total_price = qty_sold * avg_sell_price  # Total revenue from selling
+            profit_loss = total_price - costprice  # Profit/Loss from the sale
+
+            # Add the results to the profit_loss_list
+            profit_loss_list.append({
+                "stock_symbol": sname,
+                "total_sell_price": total_sell_price,
+                "total_cost_price": costprice,
+                "realized_profit_loss": profit_loss,
+                "qty_sold": qty_sold
+            })
+
+    # Combine all context data
+    context = {
+        "stock_analytics": stock_analytics,
+        "top_traded_stocks": top_traded_stocks,
+        "profit_loss_list": profit_loss_list,
+    }
+
+    return render(request, "users/portfolio_analytics.html", context)

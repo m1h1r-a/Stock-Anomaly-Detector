@@ -8,6 +8,7 @@ urlpatterns = [
     path("logout/", views.user_logout, name="logout"),
     path("", views.home, name="home"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("portfolio_analytics/", views.portfolio_analytics, name="portfolio_analytics"),
     path("analytics/", views.stock_data_api, name="stock_data_api"),
     path("portfolio/", views.portfolio_view, name="portfolio"),
     path(
@@ -25,4 +26,6 @@ urlpatterns = [
         name="add_stock_transaction",
     ),
     # path('api/stock-data/', views.stock_data_api, name='stock_data_api'),
+
+
 ]
