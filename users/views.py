@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-
+from datetime import date
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -265,8 +265,18 @@ def stock_data_api(request):
         if current_price != stored_price:
             if change_percent >= threshold:
                 spike_detected.append(symbol)  # Add to spike list if positive change exceeds threshold
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO Anomaly (StockSymbol, AnomalyType, AnomalyDate)
+                        VALUES (%s, %s, %s)
+                    """, [symbol, 'Spike', date.today()])  # 'Spike' is the AnomalyType
             elif change_percent <= -threshold:
                 drop_detected.append(symbol)  # Add to drop list if negative change exceeds threshold
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO Anomaly (StockSymbol, AnomalyType, AnomalyDate)
+                        VALUES (%s, %s, %s)
+                    """, [symbol, 'Drop', date.today()])  # 'Spike' is the AnomalyType
 
             with connection.cursor() as cursor:
                 cursor.callproc(
@@ -461,6 +471,30 @@ def portfolio_analytics(request):
             for row in cursor.fetchall()
         ]
 
+    # Query 3: Get the stock symbols with their current prices and thresholds from the portfolio table
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT p.stock_symbol, p.threshold, a.anomalytype, a.anomalydate
+            FROM portfolio p
+            JOIN anomaly a ON p.stock_symbol = a.stocksymbol
+            WHERE p.user_id = %s
+            """,
+            [user_id],
+        )
+
+        portfolio_data = [
+            {
+                "stock_symbol": row[0],
+                "threshold": row[1],
+                "anomaly_type": row[2],
+                "anomaly_date": row[3],
+            }
+            for row in cursor.fetchall()
+        ]
+        print(portfolio_data)
+
+
     # Get all unique stock symbols for the user
     share_name = (
         StockTransaction.objects.filter(user_id=user_id)
@@ -520,6 +554,7 @@ def portfolio_analytics(request):
         "stock_analytics": stock_analytics,
         "top_traded_stocks": top_traded_stocks,
         "profit_loss_list": profit_loss_list,
+        "portfolio_data" : portfolio_data
     }
 
     return render(request, "users/portfolio_analytics.html", context)

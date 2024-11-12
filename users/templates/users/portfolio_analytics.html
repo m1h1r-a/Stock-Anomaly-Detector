@@ -2,188 +2,255 @@
 
 {% block body %}
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #5679b0;
-            --secondary-color: #5679b0;
-            --background-color: #f8fafc;
-            --card-background: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: #5679b0;
+        --secondary-color: #5679b0;
+        --background-color: #f8fafc;
+        --card-background: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            overflow-y: auto;
-        }
+    body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-color);
+        color: var(--text-primary);
+        overflow-y: auto;
+    }
 
+    .container {
+        max-width: 1600px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+    }
+
+    .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .sections-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .section {
+        background: var(--card-background);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .section-header {
+        background-color: var(--primary-color);
+        padding: 1rem 1.5rem;
+        color: white;
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.925rem;
+    }
+
+    th, td {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        text-align: left;
+    }
+
+    th {
+        background-color: #f1f5f9;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
         .container {
-            max-width: 1200px;
-            margin: 8rem auto 2rem auto; /* Increased top margin to 8rem */
+            margin: 1.5rem auto;
             padding: 0 1.5rem;
         }
 
         .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 2.5rem 0;
-            margin-bottom: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1.25rem 0;
+            margin-bottom: 1.5rem;
         }
 
         h1 {
-            text-align: center;
-            color: white;
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin: 0;
+            font-size: 1.75rem;
         }
 
-        .section {
-            background: var(--card-background);
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            overflow: hidden;
+        .sections-container {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
 
         .section-header {
-            background-color: var(--primary-color);
-            padding: 1rem 1.5rem;
-            color: white;
-            font-size: 1.25rem;
-            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        th, td {
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
         }
+    }
+</style>
 
-        th {
-            background-color: #f1f5f9;
-            color: var(--text-primary);
-            font-weight: 600;
-            text-align: left;
-            padding: 1rem 1.5rem;
-        }
+<div class="container">
+    <div class="header">
+        <h1>Portfolio Analytics</h1>
+    </div>
 
-        td {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background-color: #f8fafc;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-                margin: 1rem auto;
-            }
-
-            .header {
-                padding: 1.5rem 0;
-                margin-bottom: 1.5rem;
-            }
-
-            h1 {
-                font-size: 1.75rem;
-            }
-
-            .section-header {
-                font-size: 1.125rem;
-            }
-
-            th, td {
-                padding: 0.75rem 1rem;
-                font-size: 0.875rem;
-            }
-
-            table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-        }
-    </style>
-
-    <div class="container mt-100">
-        <div class="header">
-            <h1>Portfolio Analytics</h1>
-        </div>
-
+    <div class="sections-container">
+        <!-- Stock Analytics Section -->
         <div class="section">
             <div class="section-header">Stock Analytics</div>
             <table>
-                <tr>
-                    <th>Stock Symbol</th>
-                    <th>Total Quantity</th>
-                    <th>Avg Buy Price</th>
-                    <th>Avg Sell Price</th>
-                </tr>
-                {% for stock in stock_analytics %}
-                <tr>
-                    <td>{{ stock.stock_symbol }}</td>
-                    <td>{{ stock.total_quantity }}</td>
-                    <td>{{ stock.avg_buy_price }}</td>
-                    <td>{{ stock.avg_sell_price }}</td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>Stock Symbol</th>
+                        <th>Total Quantity</th>
+                        <th>Avg Buy Price</th>
+                        <th>Avg Sell Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stock_analytics %}
+                    <tr>
+                        <td>{{ stock.stock_symbol }}</td>
+                        <td>{{ stock.total_quantity }}</td>
+                        <td>{{ stock.avg_buy_price }}</td>
+                        <td>{{ stock.avg_sell_price }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
 
+        <!-- Top Traded Stocks Section -->
         <div class="section">
             <div class="section-header">Top Traded Stocks</div>
             <table>
-                <tr>
-                    <th>Stock Symbol</th>
-                    <th>Trade Count</th>
-                </tr>
-                {% for top_stock in top_traded_stocks %}
-                <tr>
-                    <td>{{ top_stock.stock_symbol }}</td>
-                    <td>{{ top_stock.trade_count }}</td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>Stock Symbol</th>
+                        <th>Trade Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for top_stock in top_traded_stocks %}
+                    <tr>
+                        <td>{{ top_stock.stock_symbol }}</td>
+                        <td>{{ top_stock.trade_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
 
+        <!-- Realized Profit/Loss Section -->
         <div class="section">
             <div class="section-header">Realized Profit/Loss</div>
             <table>
-                <tr>
-                    <th>Stock Symbol</th>
-                    <th>Quantity Sold</th>
-                    <th>Total Sell Price</th>
-                    <th>Total Cost Price</th>
-                    <th>Realized Profit/Loss</th>
-                </tr>
-                {% for profit_loss in profit_loss_list %}
-                <tr>
-                    <td>{{ profit_loss.stock_symbol }}</td>
-                    <td>{{ profit_loss.qty_sold }}</td>
-                    <td>{{ profit_loss.total_sell_price }}</td>
-                    <td>{{ profit_loss.total_cost_price }}</td>
-                    <td>{{ profit_loss.realized_profit_loss }}</td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>Stock Symbol</th>
+                        <th>Quantity Sold</th>
+                        <th>Total Sell Price</th>
+                        <th>Total Cost Price</th>
+                        <th>Realized Profit/Loss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profit_loss in profit_loss_list %}
+                    <tr>
+                        <td>{{ profit_loss.stock_symbol }}</td>
+                        <td>{{ profit_loss.qty_sold }}</td>
+                        <td>{{ profit_loss.total_sell_price }}</td>
+                        <td>{{ profit_loss.total_cost_price }}</td>
+                        <td>{{ profit_loss.realized_profit_loss }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Anomaly Detection Section -->
+        <div class="section">
+            <div class="section-header">Anomaly Detection</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stock Symbol</th>
+                        <th>Threshold</th>
+                        <th>Anomaly Type</th>
+                        <th>Anomaly Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for anomaly in portfolio_data %}
+                    <tr>
+                        <td>{{ anomaly.stock_symbol }}</td>
+                        <td>{{ anomaly.threshold }}</td>
+                        <td>{{ anomaly.anomaly_type }}</td>
+                        <td>{{ anomaly.anomaly_date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No anomaly data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
-
+</div>
 
 {% endblock %}

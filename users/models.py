@@ -28,8 +28,12 @@ class StockTransaction(models.Model):
         db_table = "stock_transactions"  # Use the existing SQL table
 
 
-class test(models.Model):
-    number = models.IntegerField()
+class Anomaly(models.Model):
+    AnomalyID = models.AutoField(primary_key=True)  
+    StockSymbol = models.CharField(max_length=10)  
+    AnomalyType = models.CharField(max_length=10)  
+    AnomalyDate = models.DateField() 
+    AlertTimestamp = models.DateTimeField(auto_now_add=True)  
 
     class Meta:
-        db_table = "test"
+        db_table = "Anomaly"  # Use the existing SQL table
