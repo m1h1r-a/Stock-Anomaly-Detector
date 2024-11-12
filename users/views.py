@@ -238,24 +238,78 @@ def get_stock_data(symbol):
     #     'change_percent': data
     # }
 
-
 def stock_data_api(request):
-    print(222)
     user_id = request.user.id
+    # Fetch stock symbols from the user's portfolio
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [user_id]
+            "SELECT stock_symbol, threshold, current_price FROM portfolio WHERE user_id = %s", [user_id]
         )
 
-        symbols = [row[0] for row in cursor.fetchall()]
-    stock_data = [get_stock_data(symbol) for symbol in symbols]
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return JsonResponse({"stock_data": stock_data})
+        # Prepare the list of stocks and their current prices and thresholds
+        portfolio_data = cursor.fetchall()
 
-    print(symbols)
-    stock_data = [get_stock_data(symbol) for symbol in symbols]
-    return render(request, "users/analytics.html", {"stock_data": stock_data})
-    return JsonResponse(stock_data, safe=False)
+    spike_detected = []
+    drop_detected = []
+    
+    stock_data = []
+    for row in portfolio_data:
+        symbol, threshold, stored_price = row
+        
+        # Fetch the latest data from the API
+        stock = get_stock_data(symbol)
+        current_price = stock["price"]
+        change_percent = stock["change_percent"]
+        
+        # If the price has changed, check if the change percent exceeds the threshold
+        if current_price != stored_price:
+            if change_percent >= threshold:
+                spike_detected.append(symbol)  # Add to spike list if positive change exceeds threshold
+            elif change_percent <= -threshold:
+                drop_detected.append(symbol)  # Add to drop list if negative change exceeds threshold
+
+            with connection.cursor() as cursor:
+                cursor.callproc(
+                    'update_current_prices', 
+                    [user_id, stock['symbol'], stock['price']]
+                )
+        
+        stock_data.append(stock)
+    print(spike_detected,drop_detected)
+
+    # If it's an AJAX request, return the response with the list of detected spikes and drops
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "stock_data": stock_data,
+            "spike_detected": spike_detected,
+            "drop_detected": drop_detected
+        })
+    
+    # If it's not an AJAX request, return the stock data in the context
+    return render(request, "users/analytics.html", {
+        "stock_data": stock_data,
+        "spike_detected": spike_detected,
+        "drop_detected": drop_detected
+    })
+
+
+# def stock_data_api(request):
+#     print(222)
+#     user_id = request.user.id
+#     with connection.cursor() as cursor:
+#         cursor.execute(
+#             "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [user_id]
+#         )
+
+#         symbols = [row[0] for row in cursor.fetchall()]
+#     stock_data = [get_stock_data(symbol) for symbol in symbols]
+#     if request.headers.get("x-requested-with") == "XMLHttpRequest":
+#         return JsonResponse({"stock_data": stock_data})
+
+#     print(symbols)
+#     stock_data = [get_stock_data(symbol) for symbol in symbols]
+#     return render(request, "users/analytics.html", {"stock_data": stock_data})
+#     return JsonResponse(stock_data, safe=False)
 
 
 @login_required

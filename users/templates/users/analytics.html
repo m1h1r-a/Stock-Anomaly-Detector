@@ -25,7 +25,6 @@
     margin: 1rem auto 2rem;
 }
 
-/* Headers */
 .headers {
     display: flex;
     flex-direction: row;
@@ -35,14 +34,12 @@
     font-weight: 500;
 }
 
-/* Stock List Container */
 #stock-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-/* Stock Item */
 .stock-item {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -60,20 +57,13 @@
     border-right: none;
 }
 
-/* Stock Elements */
 .stock-name {
     font-weight: 500;
     color: #2d3748;
 }
 
-.price {
-    text-align: right;
-}
-
-.change {
-    text-align: right;
-}
-
+.price,
+.change,
 .percent-change {
     text-align: right;
 }
@@ -86,7 +76,23 @@
     color: #dc2626;
 }
 
-/* Mobile Responsiveness */
+.stock-alert {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    color: #2d3748;
+    text-align: center;
+}
+
+.spike-message {
+    color: #047857;
+}
+
+.drop-message {
+    color: #dc2626;
+}
+
 @media (max-width: 640px) {
     .stock-container {
         padding: 0 1rem;
@@ -122,34 +128,13 @@
         grid-row: 2;
     }
 }
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.stock-list.loading {
-    animation: pulse 1.5s infinite;
-}
 </style>
 
 <div class="stock-container">
     <h2>Stock Portfolio</h2>
-    <div id="stock-list">
-        {% for stock in stock_data %}
-        <div class="stock-item">
-            <div class="stock-name">{{ stock.symbol }}</div>
-            <div class="price">₹{{ stock.price }}</div>
-            <div class="change {% if stock.change >= 0 %}change-positive{% else %}change-negative{% endif %}">
-                {% if stock.change >= 0 %}+{% endif %}₹{{ stock.change }}
-            </div>
-            <div class="percent-change {% if stock.change_percent >= 0 %}change-positive{% else %}change-negative{% endif %}">
-                {% if stock.change_percent >= 0 %}↑{% else %}↓{% endif %} {{ stock.change_percent }}%
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+    <div id="spike-alert" class="stock-alert spike-message">Nothing detected</div>
+    <div id="drop-alert" class="stock-alert drop-message">Nothing detected</div>
+    <div id="stock-list"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -163,7 +148,22 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             success: function(response) {
-                $('#stock-list').empty();
+                console.log(response);  // Debug for spike/drop details
+                $('#stock-list').empty(); // Clear stock items
+                
+                // Update Spike and Drop Alert Messages
+                if (response.spike_detected.length > 0) {
+                    $('#spike-alert').html(`<strong>Spike Detected:</strong> ${response.spike_detected.join(', ')}`);
+                } else {
+                    $('#spike-alert').html("Nothing detected");
+                }
+
+                if (response.drop_detected.length > 0) {
+                    $('#drop-alert').html(`<strong>Drop Detected:</strong> ${response.drop_detected.join(', ')}`);
+                } else {
+                    $('#drop-alert').html("Nothing detected");
+                }
+
                 response.stock_data.forEach(stock => {
                     const stockItem = `
                         <div class="stock-item">
@@ -188,7 +188,7 @@
 
     $(document).ready(function() {
         fetchStockData();
-        setInterval(fetchStockData, 10000);
+        setInterval(fetchStockData, 10000); // Fetch data every 10 seconds
     });
 </script>
 {% endblock %}
