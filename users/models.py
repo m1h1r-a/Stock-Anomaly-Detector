@@ -6,6 +6,8 @@ class Portfolio(models.Model):
     user_id = models.IntegerField(null=True)
     username = models.CharField(max_length=30)
     stock_symbol = models.CharField(max_length=30)
+    current_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    threshold = models.DecimalField(max_digits=10, decimal_places=5, default=0.00000)
 
     class Meta:
         db_table = "portfolio"  # Use the existing SQL table

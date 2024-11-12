@@ -66,3 +66,9 @@ class AddStockTransactionForm(forms.Form):
     transaction_date = forms.DateField(
         widget=forms.DateInput(attrs={"type": "date"}), label="Transaction Date"
     )
+    threshold = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,  # This makes the field optional
+        label="Threshold",
+    )

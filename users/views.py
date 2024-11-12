@@ -29,6 +29,22 @@ def user_login(request):
             if user is not None:
                 login(request, user)  # with connection.cursor() as cursor:
                 # cursor.execute("""insert into test values (1)""")
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT stock_symbol FROM portfolio WHERE user_id = %s", [request.user.id]
+                    )
+
+                    symbols = [row[0] for row in cursor.fetchall()]
+                stock_data = [get_stock_data(symbol) for symbol in symbols]
+                print(symbols)
+                print(stock_data)
+
+                for stock in stock_data:
+                    with connection.cursor() as cursor:
+                        cursor.callproc(
+                            'update_current_prices', 
+                            [request.user.id, stock['symbol'], stock['price']]
+                        )
                 return redirect("portfolio")
 
             else:
@@ -67,6 +83,7 @@ def analytics(request):
 
 
 def home(request):
+    
     return render(request, "users/home.html")
 
 
@@ -144,6 +161,41 @@ def add_stock_transaction(request):
                             data["transaction_date"],
                         ],
                     )
+                threshold = data.get("threshold")  # Assuming threshold is in the form data
+
+                if threshold is not None:
+                    # Check if the stock symbol already exists in the portfolio for the user
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            """
+                            SELECT COUNT(*) FROM portfolio 
+                            WHERE user_id = %s AND stock_symbol = %s
+                            """,
+                            [user_id, data["stock_symbol"]],
+                        )
+                        existing_count = cursor.fetchone()[0]
+
+                    # If the stock symbol does not exist in the portfolio, insert it with threshold
+                    if existing_count == 0:
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                """
+                                INSERT INTO portfolio (user_id, stock_symbol, threshold) 
+                                VALUES (%s, %s, %s)
+                                """,
+                                [user_id, data["stock_symbol"], threshold],
+                            )
+                    else:
+                        # If it exists, update the threshold value
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                """
+                                UPDATE portfolio 
+                                SET threshold = %s 
+                                WHERE user_id = %s AND stock_symbol = %s
+                                """,
+                                [threshold, user_id, data["stock_symbol"]],
+                            )
 
                 messages.success(request, "Stock transaction added successfully.")
                 return redirect("portfolio")
@@ -157,7 +209,7 @@ def add_stock_transaction(request):
 
 
 def get_stock_data(symbol):
-    api_key = "KMSX2N60VHYWHGYR"
+    api_key = "3NCUAVLQOFKJSEKR"
     url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
     response = requests.get(url)
     data = response.json()
@@ -203,7 +255,7 @@ def stock_data_api(request):
     print(symbols)
     stock_data = [get_stock_data(symbol) for symbol in symbols]
     return render(request, "users/analytics.html", {"stock_data": stock_data})
-    # return JsonResponse(stock_data, safe=False)
+    return JsonResponse(stock_data, safe=False)
 
 
 @login_required
