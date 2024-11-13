@@ -59,13 +59,16 @@ def user_login(request):
 
 
 def register(request):
+    print(request.user.id)
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data["password"])
             user.save()
+
             return redirect("login")  # Redirect to login page after registration
+        
     else:
         form = RegistrationForm()
 
@@ -471,7 +474,7 @@ def portfolio_analytics(request):
             ) AS stock_trades
             WHERE trade_count >= %s
             ORDER BY trade_count DESC
-            LIMIT 1
+            LIMIT 3
         """,
             [user_id, min_trades],
         )

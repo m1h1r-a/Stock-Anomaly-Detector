@@ -168,9 +168,9 @@
                     const stockItem = `
                         <div class="stock-item">
                             <div class="stock-name">${stock.symbol}</div>
-                            <div class="price">₹${stock.price}</div>
+                            <div class="price">$${stock.price}</div>
                             <div class="change ${stock.change >= 0 ? 'change-positive' : 'change-negative'}">
-                                ${stock.change >= 0 ? '+' : ''}₹${stock.change}
+                                ${stock.change >= 0 ? '+' : ''}$${stock.change}
                             </div>
                             <div class="percent-change ${stock.change_percent >= 0 ? 'change-positive' : 'change-negative'}">
                                 ${stock.change_percent >= 0 ? '↑' : '↓'} ${stock.change_percent}%
