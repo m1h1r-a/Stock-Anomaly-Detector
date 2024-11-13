@@ -209,17 +209,29 @@ def add_stock_transaction(request):
 
 
 def get_stock_data(symbol):
-    api_key = "3NCUAVLQOFKJSEKR"
-    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
+    # api_key = "3NCUAVLQOFKJSEKR"
+    # url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
+    # response = requests.get(url)
+    # data = response.json()
+
+    # try:
+    #     price = float(data["Global Quote"]["05. price"])
+    #     change = float(data["Global Quote"]["09. change"])
+    #     change_percent = float(
+    #         data["Global Quote"]["10. change percent"].replace("%", "")
+    #     )
+    # except (KeyError, ValueError):
+    #     price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
+
+    api_key = "csq74s1r01qj9q8nbr3gcsq74s1r01qj9q8nbr40"  # Replace with your actual API key
+    url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={api_key}"
     response = requests.get(url)
     data = response.json()
 
     try:
-        price = float(data["Global Quote"]["05. price"])
-        change = float(data["Global Quote"]["09. change"])
-        change_percent = float(
-            data["Global Quote"]["10. change percent"].replace("%", "")
-        )
+        price = float(data["c"])  # current price
+        change = float(data["d"])  # absolute change
+        change_percent = float(data["dp"])  # percent change
     except (KeyError, ValueError):
         price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
 
@@ -261,9 +273,9 @@ def stock_data_api(request):
         print(stock["symbol"])
         current_price = stock["price"]
         change_percent = stock["change_percent"]
-        
+        print(type(current_price),type(stored_price),float(current_price) != float(stored_price))
         # If the price has changed, check if the change percent exceeds the threshold
-        if current_price != stored_price:
+        if float(current_price) != float(stored_price):
             if change_percent >= threshold:
                 spike_detected.append(symbol)  # Add to spike list if positive change exceeds threshold
                 with connection.cursor() as cursor:
@@ -279,11 +291,11 @@ def stock_data_api(request):
                         VALUES (%s, %s, %s)
                     """, [symbol, 'Drop', date.today()])  # 'Spike' is the AnomalyType
 
-        with connection.cursor() as cursor:
-            cursor.callproc(
-                'update_current_prices', 
-                [user_id, stock['symbol'], current_price]
-            )
+            with connection.cursor() as cursor:
+                cursor.callproc(
+                    'update_current_prices', 
+                    [user_id, stock['symbol'], current_price]
+                )
         
         stock_data.append(stock)
     print(spike_detected,drop_detected)
