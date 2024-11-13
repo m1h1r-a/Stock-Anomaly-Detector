@@ -258,6 +258,7 @@ def stock_data_api(request):
         
         # Fetch the latest data from the API
         stock = get_stock_data(symbol)
+        print(stock["symbol"])
         current_price = stock["price"]
         change_percent = stock["change_percent"]
         
@@ -278,11 +279,11 @@ def stock_data_api(request):
                         VALUES (%s, %s, %s)
                     """, [symbol, 'Drop', date.today()])  # 'Spike' is the AnomalyType
 
-            with connection.cursor() as cursor:
-                cursor.callproc(
-                    'update_current_prices', 
-                    [user_id, stock['symbol'], stock['price']]
-                )
+        with connection.cursor() as cursor:
+            cursor.callproc(
+                'update_current_prices', 
+                [user_id, stock['symbol'], current_price]
+            )
         
         stock_data.append(stock)
     print(spike_detected,drop_detected)
@@ -477,7 +478,7 @@ def portfolio_analytics(request):
             """
             SELECT p.stock_symbol, p.threshold, a.anomalytype, a.anomalydate
             FROM portfolio p
-            JOIN anomaly a ON p.stock_symbol = a.stocksymbol
+            JOIN Anomaly a ON p.stock_symbol = a.stocksymbol
             WHERE p.user_id = %s
             """,
             [user_id],
