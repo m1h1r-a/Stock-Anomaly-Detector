@@ -66,8 +66,17 @@ def register(request):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data["password"])
             user.save()
+        
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "CREATE USER %s@'localhost' IDENTIFIED BY %s;", [user.username, user.password]
+                )
+                cursor.execute(
+                    "GRANT SELECT,INSERT, UPDATE, DELETE, TRIGGER, EXECUTE ON dbms_project.* TO %s@'localhost';", [user.username]
+                )
+                # cursor.execute("FLUSH PRIVILEGES;")
 
-            return redirect("login")  # Redirect to login page after registration
+                return redirect("login")  # Redirect to login page after registration
         
     else:
         form = RegistrationForm()
