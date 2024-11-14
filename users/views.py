@@ -48,7 +48,7 @@ def user_login(request):
                 return redirect("portfolio")
 
             else:
-                error_message = "Invalid username or password."  # Set the error message
+                error_message = "Invalid username or password."  
 
     else:
         form = LoginForm()
@@ -76,7 +76,7 @@ def register(request):
                 )
                 # cursor.execute("FLUSH PRIVILEGES;")
 
-                return redirect("login")  # Redirect to login page after registration
+                return redirect("login")  
         
     else:
         form = RegistrationForm()
@@ -173,7 +173,7 @@ def add_stock_transaction(request):
                             data["transaction_date"],
                         ],
                     )
-                threshold = data.get("threshold")  # Assuming threshold is in the form data
+                threshold = data.get("threshold") 
 
                 if threshold is not None:
                     # Check if the stock symbol already exists in the portfolio for the user
@@ -235,19 +235,19 @@ def get_stock_data(symbol):
     # except (KeyError, ValueError):
     #     price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
 
-    api_key = "csq74s1r01qj9q8nbr3gcsq74s1r01qj9q8nbr40"  # Replace with your actual API key
+    api_key = "csqq7ohr01qv7qe2glk0csqq7ohr01qv7qe2glkg"  
     url = f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={api_key}"
     response = requests.get(url)
     data = response.json()
 
     try:
-        price = float(data["c"])  # current price
-        change = float(data["d"])  # absolute change
-        change_percent = float(data["dp"])  # percent change
+        price = float(data["c"])  
+        change = float(data["d"]) 
+        change_percent = float(data["dp"])  
     except (KeyError, ValueError):
-        price, change, change_percent = 0.0, 0.0, 0.0  # Fallback values
+        price, change, change_percent = 0.0, 0.0, 0.0  
 
-    # Return formatted data
+ 
     return {
         "symbol": symbol,
         "price": price,
@@ -270,7 +270,7 @@ def stock_data_api(request):
             "SELECT stock_symbol, threshold, current_price FROM portfolio WHERE user_id = %s", [user_id]
         )
 
-        # Prepare the list of stocks and their current prices and thresholds
+       
         portfolio_data = cursor.fetchall()
 
     spike_detected = []
@@ -289,19 +289,19 @@ def stock_data_api(request):
         # If the price has changed, check if the change percent exceeds the threshold
         if float(current_price) != float(stored_price):
             if change_percent >= threshold:
-                spike_detected.append(symbol)  # Add to spike list if positive change exceeds threshold
+                spike_detected.append(symbol)  
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         INSERT INTO Anomaly (StockSymbol, AnomalyType, AnomalyDate)
                         VALUES (%s, %s, %s)
-                    """, [symbol, 'Spike', date.today()])  # 'Spike' is the AnomalyType
+                    """, [symbol, 'Spike', date.today()])  
             elif change_percent <= -threshold:
-                drop_detected.append(symbol)  # Add to drop list if negative change exceeds threshold
+                drop_detected.append(symbol)  
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         INSERT INTO Anomaly (StockSymbol, AnomalyType, AnomalyDate)
                         VALUES (%s, %s, %s)
-                    """, [symbol, 'Drop', date.today()])  # 'Spike' is the AnomalyType
+                    """, [symbol, 'Drop', date.today()])  
 
             with connection.cursor() as cursor:
                 cursor.callproc(
@@ -312,7 +312,7 @@ def stock_data_api(request):
         stock_data.append(stock)
     print(spike_detected,drop_detected)
 
-    # If it's an AJAX request, return the response with the list of detected spikes and drops
+   
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({
             "stock_data": stock_data,
@@ -320,7 +320,7 @@ def stock_data_api(request):
             "drop_detected": drop_detected
         })
     
-    # If it's not an AJAX request, return the stock data in the context
+   
     return render(request, "users/analytics.html", {
         "stock_data": stock_data,
         "spike_detected": spike_detected,
@@ -362,7 +362,6 @@ def delete_stock(request, stock_symbol):
                 [user_id, stock_symbol],
             )
 
-            # Then delete the stock from portfolio
             cursor.execute(
                 """
                 DELETE FROM portfolio 
@@ -441,7 +440,7 @@ def update_transaction(request, transaction_id):
 def portfolio_analytics(request):
     user_id = request.user.id
 
-    # Initialize the list to hold profit/loss details for each stock
+   
     profit_loss_list = []
 
     # Query 1: Calculate total quantity, average buy price, and average sell price per stock
@@ -470,7 +469,7 @@ def portfolio_analytics(request):
         ]
 
     # Query 2: Nested query to identify top traded stocks by frequency
-    min_trades = 1  # Set the minimum trade count threshold
+    min_trades = 1 
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -527,25 +526,24 @@ def portfolio_analytics(request):
         .distinct()
     )
 
-    for sname in share_name:  # For each unique stock symbol
-        # Initialize counters
+    for sname in share_name: 
         qty_sold = 0
         total_sell_price = 0
         costprice = 0
         remaining_qty_to_sell = 0
 
-        # Get all transactions for this stock symbol
+       
         transactions = StockTransaction.objects.filter(
             user_id=user_id, stock_symbol=sname
         )
 
-        # Calculate total quantity sold and total sell price
+       
         for transaction in transactions.filter(purchase_type="SELL"):
             qty_sold += transaction.quantity
             total_sell_price += transaction.price * transaction.quantity
             remaining_qty_to_sell = qty_sold
 
-        # Calculate the cost price based on FIFO
+      
         for transaction in transactions.filter(purchase_type="BUY"):
             if remaining_qty_to_sell > 0:
                 quantity = transaction.quantity
@@ -557,13 +555,13 @@ def portfolio_analytics(request):
                     costprice += quantity * price
                     remaining_qty_to_sell -= quantity
 
-        # Calculate profit or loss if any shares were sold
+      
         if qty_sold > 0:
-            avg_sell_price = total_sell_price / qty_sold  # Average sell price
-            total_price = qty_sold * avg_sell_price  # Total revenue from selling
-            profit_loss = total_price - costprice  # Profit/Loss from the sale
+            avg_sell_price = total_sell_price / qty_sold  
+            total_price = qty_sold * avg_sell_price  
+            profit_loss = total_price - costprice  
 
-            # Add the results to the profit_loss_list
+ 
             profit_loss_list.append(
                 {
                     "stock_symbol": sname,
@@ -574,7 +572,6 @@ def portfolio_analytics(request):
                 }
             )
 
-    # Combine all context data
     context = {
         "stock_analytics": stock_analytics,
         "top_traded_stocks": top_traded_stocks,
